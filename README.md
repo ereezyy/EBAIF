@@ -5,6 +5,17 @@
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Research](https://img.shields.io/badge/Research-Cutting%20Edge-red.svg)](https://github.com/ereezyy/EBAIF)
+[![Website](https://img.shields.io/badge/Website-Live%20Demo-purple.svg)](https://biehdrmw.manus.space)
+
+## 🌐 **[🚀 LIVE INTERACTIVE DEMO](https://biehdrmw.manus.space)**
+
+Experience EBAIF in action with our interactive website featuring:
+- **Real-time AI agent evolution simulation**
+- **Live consensus validation demo**
+- **Interactive behavior parameter visualization**
+- **Comprehensive technical documentation**
+
+**Visit: [https://biehdrmw.manus.space](https://biehdrmw.manus.space)**
 
 ## 🎯 Overview
 
