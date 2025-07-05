@@ -1,0 +1,45 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-gray-900 text-white font-sans antialiased;
+  }
+}
+
+@layer components {
+  .glass {
+    @apply bg-white/10 backdrop-blur-md border border-white/20;
+  }
+  
+  .neural-glow {
+    @apply shadow-lg shadow-neural-500/25;
+  }
+  
+  .agent-node {
+    @apply relative overflow-hidden rounded-2xl glass neural-glow;
+  }
+  
+  .agent-node::before {
+    @apply absolute inset-0 bg-gradient-to-r from-neural-500/20 to-purple-500/20 opacity-50;
+    content: '';
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-gray-800;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-neural-600 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-neural-500;
+}

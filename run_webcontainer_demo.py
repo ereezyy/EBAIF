@@ -14,9 +14,9 @@ if __name__ == "__main__":
         sys.path.append('.')
         
         from examples.webcontainer_demo import run_webcontainer_demo
-        import asyncio
         
-        asyncio.run(run_webcontainer_demo())
+        # Run demo synchronously to avoid asyncio/select module issues
+        run_webcontainer_demo()
         
     except Exception as e:
         print(f"❌ Demo failed: {e}")
