@@ -76,9 +76,6 @@ def run_demo():
         print("\n  Environment state:")
         for row in environment:
             print("  " + " ".join([f"{cell:.1f}" for cell in row]))
-            
-        # Brief pause between steps
-        time.sleep(0.5)
     
     # Show final results
     print("\n🏆 Final Results:")
