@@ -9,10 +9,8 @@
     "preview": "vite preview",
     "start": "vite"
   },
+  "dependencies": {
     "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "lucide-react": "^0.263.1",
-    "framer-motion": "^10.16.4"
     "react-dom": "^18.2.0",
     "@mui/material": "^5.15.0",
     "@mui/icons-material": "^5.15.0",
