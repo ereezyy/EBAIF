@@ -27,6 +27,7 @@ class EvolutionConfig:
     diversity_maintenance: bool = True
     adaptive_mutation: bool = True
     meta_evolution: bool = True
+    diversity_sample_size: int = 25
 
 class NeuralGenome:
     """Represents a neural network genome with advanced capabilities."""
@@ -152,18 +153,26 @@ class NeuralGenome:
         
         return offspring1, offspring2
         
-    def calculate_diversity_score(self, population: List['NeuralGenome']) -> float:
+    def calculate_diversity_score(self, population: List['NeuralGenome'], limit: Optional[int] = None) -> float:
         """Calculate diversity score relative to population."""
         if not population:
             return 1.0
             
+        # Use a subset of the population for diversity estimation if it's too large
+        if limit and len(population) > limit:
+            sample_pop = random.sample(population, limit)
+        else:
+            sample_pop = population
+
         total_distance = 0.0
-        for other in population:
+        count = 0
+        for other in sample_pop:
             if other.genome_id != self.genome_id:
                 distance = self._calculate_genetic_distance(other)
                 total_distance += distance
+                count += 1
                 
-        self.diversity_score = total_distance / len(population)
+        self.diversity_score = total_distance / max(1, count)
         return self.diversity_score
         
     def _calculate_genetic_distance(self, other: 'NeuralGenome') -> float:
@@ -410,7 +419,7 @@ class AdvancedNeuralEvolution:
             
         total_diversity = 0.0
         for genome in self.population:
-            genome.calculate_diversity_score(self.population)
+            genome.calculate_diversity_score(self.population, limit=self.config.diversity_sample_size)
             total_diversity += genome.diversity_score
             
         self.current_diversity = total_diversity / len(self.population)
