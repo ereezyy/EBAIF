@@ -344,7 +344,8 @@ class BehaviorGenome:
         Returns:
             New mutated genome
         """
-        mutation_rate = mutation_rate or self.config.mutation_probability
+        if mutation_rate is None:
+            mutation_rate = self.config.mutation_probability
         
         # Create a copy of this genome
         new_genome = BehaviorGenome(self.config)
@@ -364,7 +365,10 @@ class BehaviorGenome:
                     new_activation = torch.zeros_like(gene)
                     new_activation[torch.randint(0, len(gene), (1,))] = 1.0
                     new_genome.architecture_genes[key] = new_activation
-                else:
+                elif key == 'layer_types':
+                    # Randomly select new layer types (0=dense, 1=conv, 2=attention)
+                    new_genome.architecture_genes[key] = torch.randint(0, 3, gene.shape)
+                elif gene.is_floating_point():
                     # Add Gaussian noise to continuous values
                     noise = torch.randn_like(gene) * 0.1
                     new_genome.architecture_genes[key] = torch.clamp(gene + noise, 0.001, 10.0)
@@ -461,4 +465,3 @@ class BehaviorGenome:
     
     def __repr__(self) -> str:
         return f"BehaviorGenome(id={self.genome_id[:8]}, gen={self.generation}, fitness={self.fitness_score:.3f})"
-

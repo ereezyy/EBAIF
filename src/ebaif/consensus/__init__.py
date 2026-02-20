@@ -14,8 +14,10 @@ Key Components:
 
 from .engine import ConsensusEngine
 from .validator import BehaviorValidator
-from .protocol import ConsensusProtocol
-from .reputation import ReputationSystem
+# TODO: missing module
+# from .protocol import ConsensusProtocol
+# TODO: missing module
+# from .reputation import ReputationSystem
 
 __all__ = [
     "ConsensusEngine",
