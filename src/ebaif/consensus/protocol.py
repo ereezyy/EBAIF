@@ -1,0 +1,2 @@
+class ConsensusProtocol:
+    pass
