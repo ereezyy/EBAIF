@@ -11,8 +11,7 @@ import torch.nn as nn
 import numpy as np
 from typing import Dict, List, Optional, Tuple, Any
 from dataclasses import dataclass, field
-import json
-import hashlib
+import secrets
 from enum import Enum
 
 class ArchitectureType(Enum):
@@ -83,11 +82,8 @@ class BehaviorGenome:
         self._network: Optional[nn.Module] = None
         
     def _generate_genome_id(self) -> str:
-        """Generate a unique genome ID based on configuration and timestamp."""
-        config_str = json.dumps(self.config.__dict__, sort_keys=True, default=str)
-        timestamp = str(torch.tensor(0.0).item())  # Placeholder for actual timestamp
-        hash_input = f"{config_str}_{timestamp}_{np.random.randint(0, 1000000)}"
-        return hashlib.md5(hash_input.encode()).hexdigest()[:16]
+        """Generate a unique genome ID using secure random generation."""
+        return secrets.token_hex(8)
     
     def _initialize_architecture_genes(self) -> Dict[str, torch.Tensor]:
         """Initialize the neural architecture genes."""
