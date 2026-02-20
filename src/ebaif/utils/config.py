@@ -39,11 +39,31 @@ class Config:
     
     @classmethod
     def from_file(cls, filepath: str) -> 'Config':
-        """Load configuration from JSON file."""
-        if not os.path.exists(filepath):
+        """Load configuration from JSON file.
+
+        This method validates that the file is within the current working directory
+        and has a .json extension to prevent path traversal attacks.
+        """
+        # Validate extension
+        if not filepath.endswith('.json'):
+            raise ValueError("Configuration file must have .json extension")
+
+        # Normalize path and check against CWD
+        cwd = os.getcwd()
+        abs_path = os.path.abspath(filepath)
+
+        # Use commonpath to check if abs_path is within cwd
+        # Note: os.path.commonpath raises ValueError on different drives on Windows
+        try:
+            if os.path.commonpath([cwd, abs_path]) != cwd:
+                raise ValueError(f"Access denied: Path '{filepath}' is outside the working directory.")
+        except ValueError:
+             raise ValueError(f"Access denied: Path '{filepath}' is invalid.")
+
+        if not os.path.exists(abs_path):
             return cls()
             
-        with open(filepath, 'r') as f:
+        with open(abs_path, 'r') as f:
             data = json.load(f)
         return cls(**data)
     
