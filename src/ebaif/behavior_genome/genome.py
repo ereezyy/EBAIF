@@ -217,7 +217,7 @@ class BehaviorGenome:
                 self.layers = nn.ModuleList()
                 
                 # Assume input is 1D for simplicity, can be extended for 2D/3D
-                in_channels = 1
+                in_channels = input_dim
                 for size in layer_sizes:
                     self.layers.append(nn.Conv1d(in_channels, size, kernel_size=3, padding=1))
                     self.layers.append(self._get_activation(activation))
@@ -242,6 +242,8 @@ class BehaviorGenome:
                 # Reshape for 1D conv if needed
                 if x.dim() == 2:
                     x = x.unsqueeze(1)
+                elif x.dim() == 3:
+                    x = x.transpose(1, 2)
                 
                 for layer in self.layers:
                     x = layer(x)
@@ -301,7 +303,7 @@ class BehaviorGenome:
             def __init__(self, input_dim, output_dim, layer_sizes, dropout_rate, activation):
                 super().__init__()
                 # Combine CNN and RNN components
-                self.cnn = nn.Conv1d(1, 64, kernel_size=3, padding=1)
+                self.cnn = nn.Conv1d(input_dim, 64, kernel_size=3, padding=1)
                 self.rnn = nn.LSTM(64, 128, batch_first=True)
                 self.attention = nn.MultiheadAttention(128, 8, batch_first=True)
                 self.classifier = nn.Linear(128, output_dim)
@@ -311,6 +313,8 @@ class BehaviorGenome:
                 # CNN processing
                 if x.dim() == 2:
                     x = x.unsqueeze(1)
+                elif x.dim() == 3:
+                    x = x.transpose(1, 2)
                 x = self.cnn(x)
                 x = x.transpose(1, 2)  # (batch, seq, features)
                 
