@@ -48,7 +48,26 @@ class Config:
         return cls(**data)
     
     def save_to_file(self, filepath: str):
-        """Save configuration to JSON file."""
+        """Save configuration to JSON file.
+
+        Security: This method validates the filepath to ensure it ends with .json
+        and resides within the current working directory to prevent arbitrary file writes.
+        """
+        if not filepath.endswith('.json'):
+            raise ValueError("Configuration file must have .json extension")
+
+        # Resolve path and check against CWD to prevent directory traversal
+        abs_path = os.path.abspath(filepath)
+        cwd = os.getcwd()
+
+        # Ensure we are writing within the current working directory
+        try:
+            if os.path.commonpath([abs_path, cwd]) != cwd:
+                raise ValueError("Path must be within current working directory")
+        except ValueError:
+            # Handle case where paths are on different drives
+            raise ValueError("Path must be within current working directory")
+
         with open(filepath, 'w') as f:
             json.dump(asdict(self), f, indent=2)
     
