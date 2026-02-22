@@ -10,7 +10,7 @@ import numpy as np
 import random
 import math
 import cmath
-from typing import Dict, List, Tuple, Any, Optional, Complex
+from typing import Dict, List, Tuple, Any, Optional
 from dataclasses import dataclass
 from collections import deque
 import time
@@ -32,7 +32,7 @@ class QuantumConfig:
 class QuantumBit:
     """Quantum bit representation with superposition states."""
     
-    def __init__(self, alpha: Complex = None, beta: Complex = None):
+    def __init__(self, alpha: complex = None, beta: complex = None):
         """Initialize quantum bit with probability amplitudes."""
         if alpha is None and beta is None:
             # Initialize in superposition
@@ -586,17 +586,3 @@ class QuantumInspiredOptimization:
             'convergence_status': self._check_quantum_convergence()
         }
 
-class QuantumInspiredOptimization:
-    """Main quantum-inspired optimization interface."""
-    
-    def __init__(self, config: QuantumConfig = None):
-        self.config = config or QuantumConfig()
-        self.optimizer = QuantumInspiredOptimization(config)
-        
-    async def optimize(self, fitness_function: callable, problem_size: int = 20) -> Dict[str, Any]:
-        """Run quantum-inspired optimization."""
-        return await self.optimizer.hybrid_optimize(fitness_function)
-        
-    def get_summary(self) -> Dict[str, Any]:
-        """Get optimization summary."""
-        return self.optimizer.get_quantum_summary()
