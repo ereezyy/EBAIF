@@ -83,7 +83,7 @@ class AdvancedAISystem:
         
         # Phase 1: Neural Evolution for Architecture Discovery
         print("\n🧬 Phase 1: Neural Architecture Evolution")
-        evolution_fitness = lambda genome: await self._evaluate_neural_genome(genome)
+        evolution_fitness = lambda genome: self._evaluate_neural_genome(genome)
         evolution_result = await self.neural_evolution.evolve_generation(evolution_fitness)
         
         print(f"   Best fitness: {evolution_result['best_fitness']:.4f}")
@@ -100,7 +100,7 @@ class AdvancedAISystem:
         
         # Phase 3: Swarm Intelligence for Collective Problem Solving
         print("\n🐝 Phase 3: Swarm Intelligence Optimization")
-        swarm_fitness = lambda position: await self._evaluate_swarm_position(position)
+        swarm_fitness = lambda position: self._evaluate_swarm_position(position)
         swarm_result = await self.swarm_intelligence.optimize(swarm_fitness, max_iterations=100)
         
         print(f"   Best fitness: {swarm_result['best_fitness']:.4f}")
@@ -109,7 +109,7 @@ class AdvancedAISystem:
         
         # Phase 4: Quantum-Inspired Optimization
         print("\n⚛️  Phase 4: Quantum-Inspired Optimization")
-        quantum_fitness = lambda state: await self._evaluate_quantum_state(state)
+        quantum_fitness = lambda state: self._evaluate_quantum_state(state)
         quantum_result = await self.quantum_optimizer.evolve(quantum_fitness, max_generations=100)
         
         print(f"   Best fitness: {quantum_result['best_fitness']:.4f}")

@@ -299,7 +299,7 @@ class QuantumAnnealer:
         
         return min(1.0, quantum_prob)
 
-class QuantumOptimizer:
+class QuantumInspiredOptimization:
     """Main quantum-inspired optimization system."""
     
     def __init__(self, config: QuantumConfig = None):
@@ -586,17 +586,10 @@ class QuantumOptimizer:
             'convergence_status': self._check_quantum_convergence()
         }
 
-class QuantumInspiredOptimization:
-    """Main quantum-inspired optimization interface."""
-    
-    def __init__(self, config: QuantumConfig = None):
-        self.config = config or QuantumConfig()
-        self.optimizer = QuantumOptimizer(config)
-        
     async def optimize(self, fitness_function: callable, problem_size: int = 20) -> Dict[str, Any]:
         """Run quantum-inspired optimization."""
-        return await self.optimizer.hybrid_optimize(fitness_function)
+        return await self.hybrid_optimize(fitness_function)
         
     def get_summary(self) -> Dict[str, Any]:
         """Get optimization summary."""
-        return self.optimizer.get_quantum_summary()
+        return self.get_quantum_summary()
