@@ -1,33 +1,35 @@
-import sys
 import unittest
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
+import sys
 import os
+import importlib
 
-# Create a MockTensor class to handle comparison operators and methods
+# Define strict MockTensor
 class MockTensor:
     def __init__(self, *args, **kwargs):
-        pass
+        self.dtype = kwargs.get('dtype', MagicMock())
+        self.shape = kwargs.get('shape', (1,))
 
     def __lt__(self, other):
-        return MockTensor()
+        return MockTensor(dtype='bool')
+
     def __le__(self, other):
-        return MockTensor()
+        return MockTensor(dtype='bool')
+
     def __gt__(self, other):
-        return MockTensor()
+        return MockTensor(dtype='bool')
+
     def __ge__(self, other):
-        return MockTensor()
+        return MockTensor(dtype='bool')
 
-    def item(self):
-        return 0.0
-
-    def __iter__(self):
-        return iter([MockTensor()])
-
-    def __getitem__(self, key):
-        return MockTensor()
+    def __invert__(self):
+        return self
 
     def __setitem__(self, key, value):
         pass
+
+    def item(self):
+        return 0.0
 
     def clone(self):
         return self
@@ -35,40 +37,60 @@ class MockTensor:
     def tolist(self):
         return []
 
-    # Handle random attribute access (like dtype, shape, etc)
-    def __getattr__(self, name):
-        return MagicMock()
-
-# Mock torch
-mock_torch = MagicMock()
-mock_torch.Tensor = MockTensor
-mock_torch.tensor.side_effect = lambda *args, **kwargs: MockTensor()
-mock_torch.zeros.side_effect = lambda *args, **kwargs: MockTensor()
-mock_torch.rand.side_effect = lambda *args, **kwargs: MockTensor()
-mock_torch.randint.side_effect = lambda *args, **kwargs: MockTensor()
-mock_torch.float32 = "float32"
-mock_torch.bool = "bool"
-
-sys.modules["torch"] = mock_torch
-sys.modules["torch.nn"] = MagicMock()
-
-# Mock numpy
-mock_numpy = MagicMock()
-mock_numpy.random.randint.return_value = 12345
-sys.modules["numpy"] = mock_numpy
-
-# Mock missing consensus modules
-sys.modules["ebaif.consensus.protocol"] = MagicMock()
-sys.modules["ebaif.consensus.reputation"] = MagicMock()
-
-# Add src to path
-sys.path.append(os.path.join(os.path.dirname(__file__), '../src'))
-
-from ebaif.behavior_genome.genome import BehaviorGenome
+    def __repr__(self):
+        return "MockTensor()"
 
 class TestBehaviorGenomeFitness(unittest.TestCase):
+    def setUp(self):
+        # Setup path
+        self.src_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../src'))
+        if self.src_path not in sys.path:
+            sys.path.insert(0, self.src_path)
+
+        # Setup mocks
+        self.mock_torch = MagicMock()
+        self.mock_torch.Tensor = MockTensor
+        self.mock_torch.tensor.side_effect = lambda *args, **kwargs: MockTensor()
+        self.mock_torch.zeros.side_effect = lambda *args, **kwargs: MockTensor()
+        self.mock_torch.rand.side_effect = lambda *args, **kwargs: MockTensor()
+        self.mock_torch.randint.side_effect = lambda *args, **kwargs: MockTensor()
+        self.mock_torch.float32 = "float32"
+        self.mock_torch.bool = "bool"
+
+        self.mock_numpy = MagicMock()
+        self.mock_numpy.random.randint.return_value = 12345
+
+        # Patch sys.modules
+        self.modules_patcher = patch.dict(sys.modules, {
+            "torch": self.mock_torch,
+            "torch.nn": MagicMock(),
+            "numpy": self.mock_numpy,
+            "ebaif.consensus.protocol": MagicMock(),
+            "ebaif.consensus.reputation": MagicMock()
+        })
+        self.modules_patcher.start()
+
+        # Import/Reload module under test
+        try:
+            import ebaif.behavior_genome.genome
+            importlib.reload(ebaif.behavior_genome.genome)
+            self.genome_module = ebaif.behavior_genome.genome
+        except ImportError:
+            self.fail("Could not import ebaif.behavior_genome.genome")
+
+    def tearDown(self):
+        self.modules_patcher.stop()
+        if self.src_path in sys.path:
+            sys.path.remove(self.src_path)
+
+        # Clean up the module to prevent leakage of mocks to other tests
+        if 'ebaif.behavior_genome.genome' in sys.modules:
+            del sys.modules['ebaif.behavior_genome.genome']
+
     def test_fitness_history_limit(self):
-        """Test that performance history is limited to 1000 entries and fitness score is updated."""
+        """Test that performance history is limited to 1000 entries."""
+        # Use the class from the reloaded module
+        BehaviorGenome = self.genome_module.BehaviorGenome
         genome = BehaviorGenome()
 
         # Verify initial state
