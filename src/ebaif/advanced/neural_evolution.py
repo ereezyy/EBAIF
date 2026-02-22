@@ -10,7 +10,7 @@ import numpy as np
 import random
 import math
 from typing import Dict, List, Tuple, Any, Optional
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from collections import deque
 import time
 
@@ -216,7 +216,7 @@ class AdvancedNeuralEvolution:
         self.adaptive_mutation_rate = self.config.mutation_rate
         
         # Meta-evolution parameters
-        self.meta_population: List[EvolutionConfig] = []
+        self.meta_population: List[Tuple[EvolutionConfig, float]] = []
         self.meta_generation = 0
         
     async def initialize_population(self) -> List[NeuralGenome]:
@@ -502,25 +502,35 @@ class AdvancedNeuralEvolution:
         
     async def _meta_evolve(self):
         """Evolve the evolution parameters themselves."""
-        if not self.meta_population:
-            # Initialize meta-population
-            for _ in range(10):
-                config = EvolutionConfig()
-                config.mutation_rate = random.uniform(0.05, 0.3)
-                config.crossover_rate = random.uniform(0.6, 0.9)
-                config.tournament_size = random.randint(3, 7)
-                config.elite_ratio = random.uniform(0.1, 0.3)
-                self.meta_population.append(config)
-                
-        # Evaluate meta-population based on evolution performance
+        # Store current configuration performance
         current_performance = self.best_genome.fitness if self.best_genome else 0.0
         
-        # Simple meta-evolution: mutate best performing configs
-        best_config = max(self.meta_population, key=lambda c: current_performance)
+        # Snapshot current config
+        current_config = replace(self.config)
+        self.meta_population.append((current_config, current_performance))
         
-        # Update current config towards best meta-config
-        self.config.mutation_rate = (self.config.mutation_rate + best_config.mutation_rate) / 2
-        self.config.crossover_rate = (self.config.crossover_rate + best_config.crossover_rate) / 2
+        # Limit meta-population size (keep top 20 best performing configs)
+        if len(self.meta_population) > 20:
+            self.meta_population.sort(key=lambda x: x[1], reverse=True)
+            self.meta_population = self.meta_population[:20]
+
+        # Select best config from history
+        if self.meta_population:
+            best_config, _ = max(self.meta_population, key=lambda x: x[1])
+
+            # Update current config towards best meta-config (drift with momentum)
+            alpha = 0.5
+            self.config.mutation_rate = (self.config.mutation_rate * alpha + best_config.mutation_rate * (1 - alpha))
+            self.config.crossover_rate = (self.config.crossover_rate * alpha + best_config.crossover_rate * (1 - alpha))
+
+            # Add exploration noise
+            if random.random() < 0.2:
+                self.config.mutation_rate *= random.uniform(0.9, 1.1)
+                self.config.crossover_rate *= random.uniform(0.9, 1.1)
+
+            # Clamp values
+            self.config.mutation_rate = max(0.01, min(0.5, self.config.mutation_rate))
+            self.config.crossover_rate = max(0.1, min(1.0, self.config.crossover_rate))
         
     def _record_evolution_stats(self) -> Dict[str, Any]:
         """Record evolution statistics."""
