@@ -10,7 +10,8 @@ import numpy as np
 import random
 import math
 import cmath
-from typing import Dict, List, Tuple, Any, Optional, Complex
+from typing import Dict, List, Tuple, Any, Optional
+import itertools
 from dataclasses import dataclass
 from collections import deque
 import time
@@ -32,7 +33,7 @@ class QuantumConfig:
 class QuantumBit:
     """Quantum bit representation with superposition states."""
     
-    def __init__(self, alpha: Complex = None, beta: Complex = None):
+    def __init__(self, alpha: complex = None, beta: complex = None):
         """Initialize quantum bit with probability amplitudes."""
         if alpha is None and beta is None:
             # Initialize in superposition
@@ -298,7 +299,7 @@ class QuantumAnnealer:
         
         return min(1.0, quantum_prob)
 
-class QuantumInspiredOptimization:
+class QuantumOptimizer:
     """Main quantum-inspired optimization system."""
     
     def __init__(self, config: QuantumConfig = None):
@@ -414,6 +415,27 @@ class QuantumInspiredOptimization:
         if self.best_chromosome is None or current_best.fitness > self.best_chromosome.fitness:
             self.best_chromosome = current_best.copy()
             
+    def _precompute_selection_probabilities(self):
+        """Precompute selection probabilities for efficient sampling."""
+        if not self.population:
+            self._selection_cum_weights = []
+            return
+
+        fitness_values = [c.fitness for c in self.population]
+        min_fitness = min(fitness_values)
+
+        # Shift to positive values
+        shifted_fitness = [f - min_fitness + 1e-6 for f in fitness_values]
+
+        quantum_weights = []
+        for i, chromosome in enumerate(self.population):
+            base_weight = shifted_fitness[i]
+            quantum_entropy = chromosome.get_superposition_entropy()
+            quantum_weight = base_weight * (1.0 + 0.2 * quantum_entropy)
+            quantum_weights.append(quantum_weight)
+
+        self._selection_cum_weights = list(itertools.accumulate(quantum_weights))
+
     async def _quantum_evolution_step(self) -> List[QuantumChromosome]:
         """Perform one step of quantum evolution."""
         new_population = []
@@ -423,6 +445,9 @@ class QuantumInspiredOptimization:
         elites = sorted(self.population, key=lambda c: c.fitness, reverse=True)[:elite_count]
         new_population.extend([elite.copy() for elite in elites])
         
+        # Precompute selection probabilities
+        self._precompute_selection_probabilities()
+
         # Quantum reproduction
         while len(new_population) < self.config.population_size:
             # Quantum selection
@@ -442,39 +467,14 @@ class QuantumInspiredOptimization:
             new_population.extend([offspring1, offspring2])
             
         return new_population[:self.config.population_size]
-        
     def _quantum_selection(self) -> QuantumChromosome:
         """Quantum-inspired selection based on superposition of fitness."""
-        # Calculate selection probabilities with quantum enhancement
-        fitness_values = [c.fitness for c in self.population]
-        min_fitness = min(fitness_values)
-        
-        # Shift to positive values
-        shifted_fitness = [f - min_fitness + 1e-6 for f in fitness_values]
-        
-        # Quantum superposition weights
-        quantum_weights = []
-        for i, chromosome in enumerate(self.population):
-            base_weight = shifted_fitness[i]
-            quantum_entropy = chromosome.get_superposition_entropy()
-            quantum_weight = base_weight * (1.0 + 0.2 * quantum_entropy)
-            quantum_weights.append(quantum_weight)
+        # Use precomputed weights if available
+        if hasattr(self, '_selection_cum_weights') and self._selection_cum_weights and self._selection_cum_weights[-1] > 0:
+            return random.choices(self.population, cum_weights=self._selection_cum_weights, k=1)[0]
             
-        # Weighted selection
-        total_weight = sum(quantum_weights)
-        if total_weight <= 0:
-            return random.choice(self.population)
-            
-        selection_point = random.uniform(0, total_weight)
-        cumulative_weight = 0
-        
-        for i, weight in enumerate(quantum_weights):
-            cumulative_weight += weight
-            if cumulative_weight >= selection_point:
-                return self.population[i]
-                
-        return self.population[-1]  # Fallback
-        
+        # Fallback to random choice if weights are invalid or not computed
+        return random.choice(self.population)
     def _apply_population_decoherence(self):
         """Apply decoherence to the entire population."""
         for chromosome in self.population:
@@ -591,7 +591,7 @@ class QuantumInspiredOptimization:
     
     def __init__(self, config: QuantumConfig = None):
         self.config = config or QuantumConfig()
-        self.optimizer = QuantumInspiredOptimization(config)
+        self.optimizer = QuantumOptimizer(config)
         
     async def optimize(self, fitness_function: callable, problem_size: int = 20) -> Dict[str, Any]:
         """Run quantum-inspired optimization."""
