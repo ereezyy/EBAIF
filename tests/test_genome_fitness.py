@@ -1,30 +1,32 @@
 import sys
 import unittest
-from unittest.mock import MagicMock
-import os
+from unittest.mock import MagicMock, patch
 
-# Create a MockTensor class to handle comparison operators and other tensor methods
+# Define MockTensor
 class MockTensor:
-    def __init__(self, *args, **kwargs):
-        pass
+    def __init__(self, value=0.0):
+        self.value = value
 
     def __gt__(self, other):
-        return MockTensor()
+        # Return a MockTensor that evaluates to False to simulate 'False' for initialization checks
+        # or True if needed. For history limit test, it's mostly about appending floats.
+        # But initialization does check config values.
+        return MockTensor(0.0)
 
     def __lt__(self, other):
-        return MockTensor()
+        return MockTensor(0.0)
 
     def item(self):
-        return 0.0
+        return float(self.value)
 
     def __float__(self):
-        return 0.0
+        return float(self.value)
 
     def __setitem__(self, key, value):
         pass
 
     def clone(self):
-        return self
+        return MockTensor(self.value)
 
     def tolist(self):
         return []
@@ -32,41 +34,44 @@ class MockTensor:
     def __getattr__(self, name):
         return MagicMock()
 
-# Mock torch
-mock_torch = MagicMock()
-mock_torch.Tensor = MockTensor
-mock_torch.tensor = MagicMock(return_value=MockTensor())
-mock_torch.zeros = MagicMock(return_value=MockTensor())
-mock_torch.rand = MagicMock(return_value=MockTensor())
-mock_torch.randint = MagicMock(return_value=MockTensor())
-mock_torch.float32 = "float32"
+# Create a dictionary of mocks
+mock_modules = {
+    "torch": MagicMock(),
+    "torch.nn": MagicMock(),
+    "numpy": MagicMock(),
+    "ebaif.consensus.protocol": MagicMock(),
+    "ebaif.consensus.reputation": MagicMock(),
+}
 
-sys.modules["torch"] = mock_torch
-sys.modules["torch.nn"] = MagicMock()
+# Configure torch mock
+mock_modules["torch"].Tensor = MockTensor
+mock_modules["torch"].tensor = lambda x, **kwargs: MockTensor(x) if isinstance(x, (int, float)) else MockTensor()
+mock_modules["torch"].zeros = lambda *args: MockTensor()
+mock_modules["torch"].rand = lambda *args: MockTensor()
+mock_modules["torch"].randint = lambda *args: MockTensor()
+mock_modules["torch"].float32 = "float32"
 
-# Mock numpy
-mock_numpy = MagicMock()
-mock_numpy.random.randint = MagicMock(return_value=12345)
-sys.modules["numpy"] = mock_numpy
+# Configure numpy mock
+mock_modules["numpy"].random.randint.return_value = 12345
 
-# Add src to path so we can import the module
-current_dir = os.path.dirname(os.path.abspath(__file__))
-src_path = os.path.join(current_dir, '../src')
-if src_path not in sys.path:
-    sys.path.append(src_path)
-
-# Mock ebaif.consensus.protocol because it's missing in the filesystem
-mock_consensus_protocol = MagicMock()
-mock_consensus_protocol.ConsensusProtocol = MagicMock()
-sys.modules["ebaif.consensus.protocol"] = mock_consensus_protocol
-
-# Mock ebaif.consensus.reputation because it might be missing
-mock_consensus_reputation = MagicMock()
-sys.modules["ebaif.consensus.reputation"] = mock_consensus_reputation
+# Patch sys.modules
+patcher = patch.dict(sys.modules, mock_modules)
+patcher.start()
 
 from ebaif.behavior_genome.genome import BehaviorGenome
 
 class TestBehaviorGenomeFitness(unittest.TestCase):
+    def setUp(self):
+        # Ensure mocks are active (redundant if patcher is global, but good practice)
+        pass
+
+    def tearDown(self):
+        # Stop patcher if we wanted to isolate completely, but since we imported BehaviorGenome globally
+        # with the mocks active, we should keep them active or reload the module.
+        # For this simple test file, global patching is acceptable as it mimics the environment
+        # for the imported module.
+        pass
+
     def test_fitness_history_limit(self):
         """Test that performance history is limited to 1000 entries."""
         genome = BehaviorGenome()
