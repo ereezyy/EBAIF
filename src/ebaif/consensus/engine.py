@@ -468,6 +468,7 @@ class ConsensusEngine:
         self.consensus_history.append({
             'proposal_id': proposal.proposal_id,
             'timestamp': proposal.timestamp,
+            'duration': time.time() - proposal.timestamp,
             'consensus_score': proposal.consensus_score,
             'success': True,
             'validator_count': len(proposal.votes),
@@ -499,6 +500,7 @@ class ConsensusEngine:
         self.consensus_history.append({
             'proposal_id': proposal.proposal_id,
             'timestamp': proposal.timestamp,
+            'duration': time.time() - proposal.timestamp,
             'consensus_score': proposal.consensus_score,
             'success': False,
             'validator_count': len(proposal.votes),
@@ -592,6 +594,7 @@ class ConsensusEngine:
                 'consensus_score': proposal.consensus_score,
                 'votes': proposal.votes,
                 'timestamp': proposal.timestamp,
+            'duration': time.time() - proposal.timestamp,
             }
             
         # Check completed proposals
@@ -603,6 +606,7 @@ class ConsensusEngine:
                     'consensus_score': proposal.consensus_score,
                     'votes': proposal.votes,
                     'timestamp': proposal.timestamp,
+            'duration': time.time() - proposal.timestamp,
                 }
                 
         return None
