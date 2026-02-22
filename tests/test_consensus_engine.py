@@ -28,8 +28,8 @@ sys.modules['numpy'].mean.return_value = 0.5
 
 class TestConsensusEngine(unittest.TestCase):
     def setUp(self):
-        # Patch time to control timestamps
-        self.time_patcher = patch('time.time')
+        # Patch time in the module under test to control timestamps
+        self.time_patcher = patch('ebaif.consensus.engine.time.time')
         self.mock_time = self.time_patcher.start()
         self.mock_time.return_value = 1000.0
 
