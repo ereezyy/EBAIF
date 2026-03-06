@@ -391,12 +391,13 @@ class QuantumInspiredOptimization:
         """Evaluate fitness for a single chromosome."""
         try:
             # Multiple measurements for quantum averaging
-            fitness_measurements = []
-            
+            # Run measurements concurrently for performance
+            measurement_tasks = []
             for _ in range(3):  # 3 measurements per chromosome
                 measured_state = chromosome.measure_all()
-                fitness = await fitness_function(measured_state)
-                fitness_measurements.append(fitness)
+                measurement_tasks.append(fitness_function(measured_state))
+
+            fitness_measurements = await asyncio.gather(*measurement_tasks)
                 
             # Average fitness across measurements
             chromosome.fitness = sum(fitness_measurements) / len(fitness_measurements)
