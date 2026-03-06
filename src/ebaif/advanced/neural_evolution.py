@@ -8,6 +8,7 @@ neural architecture search, and meta-learning approaches.
 import asyncio
 import numpy as np
 import random
+import secrets
 import math
 from typing import Dict, List, Tuple, Any, Optional
 from dataclasses import dataclass, replace
@@ -32,7 +33,7 @@ class NeuralGenome:
     """Represents a neural network genome with advanced capabilities."""
     
     def __init__(self, genome_id: str = None):
-        self.genome_id = genome_id or f"genome_{int(time.time() * 1000)}_{random.randint(0, 9999)}"
+        self.genome_id = genome_id or f"genome_{secrets.token_hex(8)}"
         self.fitness = 0.0
         self.age = 0
         self.generation = 0
