@@ -13,6 +13,7 @@ from typing import Dict, List, Optional, Set, Tuple, Any, Callable
 from dataclasses import dataclass, field
 from enum import Enum
 import time
+import uuid
 import json
 import logging
 from collections import defaultdict, deque
@@ -84,7 +85,7 @@ class ConsensusEngine:
         self.validator_factory = validator_factory
         
         # Core state
-        self.engine_id = f"consensus_{int(time.time() * 1000)}"
+        self.engine_id = f"consensus_{uuid.uuid4()}"
         self.active_proposals: Dict[str, BehaviorProposal] = {}
         self.completed_proposals: deque = deque(maxlen=1000)
         self.validators: Dict[str, Any] = {}  # validator_id -> validator_instance
@@ -171,7 +172,7 @@ class ConsensusEngine:
             raise RuntimeError("Maximum concurrent proposals reached")
             
         # Generate proposal ID
-        proposal_id = f"proposal_{proposer_id}_{int(time.time() * 1000)}"
+        proposal_id = f"proposal_{proposer_id}_{uuid.uuid4()}"
         
         # Check for similar existing behaviors
         if await self._is_behavior_duplicate(genome):
