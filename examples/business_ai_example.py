@@ -7,7 +7,7 @@ Shows how to use EBAIF for adaptive business AI systems.
 import asyncio
 import torch
 import numpy as np
-from typing import Dict, List, Tuple, Any
+from typing import Dict, List, Any
 from dataclasses import dataclass
 from src.ebaif import BehaviorGenome, EmergentAgent, ConsensusEngine
 from src.ebaif.behavior_genome.genome import GenomeConfig
