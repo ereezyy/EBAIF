@@ -466,6 +466,7 @@ class ConsensusEngine:
                 
         # Record consensus history
         self.consensus_history.append({
+            'duration': time.time() - proposal.timestamp,
             'proposal_id': proposal.proposal_id,
             'timestamp': proposal.timestamp,
             'consensus_score': proposal.consensus_score,
@@ -497,6 +498,7 @@ class ConsensusEngine:
                 
         # Record consensus history
         self.consensus_history.append({
+            'duration': time.time() - proposal.timestamp,
             'proposal_id': proposal.proposal_id,
             'timestamp': proposal.timestamp,
             'consensus_score': proposal.consensus_score,
