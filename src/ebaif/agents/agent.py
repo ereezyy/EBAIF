@@ -177,17 +177,14 @@ class EmergentAgent:
         self.state = AgentState.ACTING
         
         # Get action from network
-        with torch.no_grad():
-            if environment_state.dim() == 1:
-                environment_state = environment_state.unsqueeze(0)
-            
-            action_logits = self.network(environment_state)
-            
-            # Apply behavior genome parameters
-            action_probs = self._apply_behavioral_modulation(action_logits, available_actions)
-            
-            # Select action based on exploration/exploitation balance
-            selected_action = self._select_action(action_probs, available_actions)
+        # Run potentially blocking inference in a separate thread
+        loop = asyncio.get_running_loop()
+        action_probs, selected_action = await loop.run_in_executor(
+            None,
+            self._perform_action_selection,
+            environment_state,
+            available_actions
+        )
             
         step_info.update({
             'action_probs': action_probs.tolist(),
@@ -202,6 +199,26 @@ class EmergentAgent:
         
         self.state = AgentState.IDLE
         return selected_action, step_info
+
+    def _perform_action_selection(self, environment_state: torch.Tensor,
+                                available_actions: List[int]) -> Tuple[torch.Tensor, int]:
+        """
+        Perform action selection including network inference.
+        This method is designed to be run in an executor to avoid blocking the asyncio loop.
+        """
+        with torch.no_grad():
+            if environment_state.dim() == 1:
+                environment_state = environment_state.unsqueeze(0)
+
+            action_logits = self.network(environment_state)
+
+            # Apply behavior genome parameters
+            action_probs = self._apply_behavioral_modulation(action_logits, available_actions)
+
+            # Select action based on exploration/exploitation balance
+            selected_action = self._select_action(action_probs, available_actions)
+
+            return action_probs, selected_action
         
     def _apply_behavioral_modulation(self, action_logits: torch.Tensor, 
                                    available_actions: List[int]) -> torch.Tensor:
