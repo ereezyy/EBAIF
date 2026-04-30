@@ -181,7 +181,9 @@ class EmergentAgent:
             if environment_state.dim() == 1:
                 environment_state = environment_state.unsqueeze(0)
             
-            action_logits = self.network(environment_state)
+            # Offload heavy inference to executor
+            loop = asyncio.get_running_loop()
+            action_logits = await loop.run_in_executor(None, self.network, environment_state)
             
             # Apply behavior genome parameters
             action_probs = self._apply_behavioral_modulation(action_logits, available_actions)
