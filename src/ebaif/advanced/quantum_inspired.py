@@ -12,9 +12,9 @@ import math
 import cmath
 from typing import Dict, List, Tuple, Any, Optional
 import itertools
+from typing import Dict, List, Tuple, Any, Optional
 from dataclasses import dataclass
 from collections import deque
-import time
 
 @dataclass
 class QuantumConfig:

@@ -264,18 +264,12 @@ class MetaModel:
             grad_matrix = gradients[param_name]
             
             if 'W' in param_name:  # Weight matrix
-                updated_matrix = []
-                for i in range(len(param_matrix)):
-                    updated_row = []
-                    for j in range(len(param_matrix[i])):
-                        new_val = param_matrix[i][j] - learning_rate * grad_matrix[i][j]
-                        updated_row.append(new_val)
-                    updated_matrix.append(updated_row)
+                updated_matrix = [
+                    [p - learning_rate * g for p, g in zip(p_row, g_row)]
+                    for p_row, g_row in zip(param_matrix, grad_matrix)
+                ]
             else:  # Bias vector
-                updated_matrix = []
-                for i in range(len(param_matrix)):
-                    new_val = param_matrix[i] - learning_rate * grad_matrix[i]
-                    updated_matrix.append(new_val)
+                updated_matrix = [p - learning_rate * g for p, g in zip(param_matrix, grad_matrix)]
                     
             updated_params[param_name] = updated_matrix
             
@@ -386,24 +380,23 @@ class MetaLearningEngine:
             task_gradients = await self._compute_task_gradients(task, adapted_parameters)
             
             # Accumulate meta-gradients
-            for param_name in meta_gradients:
-                if isinstance(meta_gradients[param_name][0], list):  # Weight matrix
-                    for i in range(len(meta_gradients[param_name])):
-                        for j in range(len(meta_gradients[param_name][i])):
-                            meta_gradients[param_name][i][j] += task_gradients[param_name][i][j]
+            for param_name, meta_val in meta_gradients.items():
+                task_val = task_gradients[param_name]
+                if isinstance(meta_val[0], list):  # Weight matrix
+                    for meta_row, task_row in zip(meta_val, task_val):
+                        for j in range(len(meta_row)):
+                            meta_row[j] += task_row[j]
                 else:  # Bias vector
-                    for i in range(len(meta_gradients[param_name])):
-                        meta_gradients[param_name][i] += task_gradients[param_name][i]
+                    for i in range(len(meta_val)):
+                        meta_val[i] += task_val[i]
                         
         # Average gradients across meta-batch
-        for param_name in meta_gradients:
-            if isinstance(meta_gradients[param_name][0], list):  # Weight matrix
-                for i in range(len(meta_gradients[param_name])):
-                    for j in range(len(meta_gradients[param_name][i])):
-                        meta_gradients[param_name][i][j] /= len(meta_batch)
+        num_tasks = len(meta_batch)
+        for param_name, meta_val in meta_gradients.items():
+            if isinstance(meta_val[0], list):  # Weight matrix
+                meta_gradients[param_name] = [[cell / num_tasks for cell in row] for row in meta_val]
             else:  # Bias vector
-                for i in range(len(meta_gradients[param_name])):
-                    meta_gradients[param_name][i] /= len(meta_batch)
+                meta_gradients[param_name] = [cell / num_tasks for cell in meta_val]
                     
         return meta_gradients
         
@@ -447,24 +440,23 @@ class MetaLearningEngine:
             if total_gradients is None:
                 total_gradients = gradients
             else:
-                for param_name in total_gradients:
-                    if isinstance(total_gradients[param_name][0], list):  # Weight matrix
-                        for i in range(len(total_gradients[param_name])):
-                            for j in range(len(total_gradients[param_name][i])):
-                                total_gradients[param_name][i][j] += gradients[param_name][i][j]
+                for param_name, total_val in total_gradients.items():
+                    grad_val = gradients[param_name]
+                    if isinstance(total_val[0], list):  # Weight matrix
+                        for total_row, grad_row in zip(total_val, grad_val):
+                            for j in range(len(total_row)):
+                                total_row[j] += grad_row[j]
                     else:  # Bias vector
-                        for i in range(len(total_gradients[param_name])):
-                            total_gradients[param_name][i] += gradients[param_name][i]
+                        for i in range(len(total_val)):
+                            total_val[i] += grad_val[i]
                             
         # Average gradients
-        for param_name in total_gradients:
-            if isinstance(total_gradients[param_name][0], list):  # Weight matrix
-                for i in range(len(total_gradients[param_name])):
-                    for j in range(len(total_gradients[param_name][i])):
-                        total_gradients[param_name][i][j] /= len(task['support_set'])
+        num_examples = len(task['support_set'])
+        for param_name, total_val in total_gradients.items():
+            if isinstance(total_val[0], list):  # Weight matrix
+                total_gradients[param_name] = [[cell / num_examples for cell in row] for row in total_val]
             else:  # Bias vector
-                for i in range(len(total_gradients[param_name])):
-                    total_gradients[param_name][i] /= len(task['support_set'])
+                total_gradients[param_name] = [cell / num_examples for cell in total_val]
                     
         return total_gradients
         
@@ -488,24 +480,23 @@ class MetaLearningEngine:
             if total_gradients is None:
                 total_gradients = gradients
             else:
-                for param_name in total_gradients:
-                    if isinstance(total_gradients[param_name][0], list):  # Weight matrix
-                        for i in range(len(total_gradients[param_name])):
-                            for j in range(len(total_gradients[param_name][i])):
-                                total_gradients[param_name][i][j] += gradients[param_name][i][j]
+                for param_name, total_val in total_gradients.items():
+                    grad_val = gradients[param_name]
+                    if isinstance(total_val[0], list):  # Weight matrix
+                        for total_row, grad_row in zip(total_val, grad_val):
+                            for j in range(len(total_row)):
+                                total_row[j] += grad_row[j]
                     else:  # Bias vector
-                        for i in range(len(total_gradients[param_name])):
-                            total_gradients[param_name][i] += gradients[param_name][i]
+                        for i in range(len(total_val)):
+                            total_val[i] += grad_val[i]
                             
         # Average gradients
-        for param_name in total_gradients:
-            if isinstance(total_gradients[param_name][0], list):  # Weight matrix
-                for i in range(len(total_gradients[param_name])):
-                    for j in range(len(total_gradients[param_name][i])):
-                        total_gradients[param_name][i][j] /= len(task['query_set'])
+        num_examples = len(task['query_set'])
+        for param_name, total_val in total_gradients.items():
+            if isinstance(total_val[0], list):  # Weight matrix
+                total_gradients[param_name] = [[cell / num_examples for cell in row] for row in total_val]
             else:  # Bias vector
-                for i in range(len(total_gradients[param_name])):
-                    total_gradients[param_name][i] /= len(task['query_set'])
+                total_gradients[param_name] = [cell / num_examples for cell in total_val]
                     
         return total_gradients
         

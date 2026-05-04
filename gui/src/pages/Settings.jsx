@@ -49,7 +49,7 @@ const Settings = () => {
   })
 
   const [agentSettings, setAgentSettings] = React.useState({
-    autoMode: true,
+    autoMode: false,
     resourceLimit: 70,
     maxTasks: 10,
     learningRate: 0.005,
@@ -57,13 +57,13 @@ const Settings = () => {
     emailEnabled: true,
     smsEnabled: true,
     socialEnabled: true,
-    codeEditingEnabled: true
+    codeEditingEnabled: false
   })
 
   const [securitySettings, setSecuritySettings] = React.useState({
     contentFiltering: true,
     apiRateLimiting: true,
-    sandboxCodeExecution: true,
+    sandboxCodeExecution: false,
     automaticBackups: true,
     backupFrequency: 'daily'
   })
